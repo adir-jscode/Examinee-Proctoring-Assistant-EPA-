@@ -4,10 +4,16 @@ from PIL import Image, ImageTk
 import os
 import cv2
 import logging
+import numpy as np
 from datetime import datetime
 
 # Dummy database for storing user credentials (in a real system, you'd use a database)
-users_db = {}
+users_db = {
+    "admin": "admin123",
+    "user1": "password1"
+}
+
+logged_in_user = None  # To keep track of the currently logged-in user
 
 # Setup logging
 logging.basicConfig(filename='proctoring_log.txt', level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -28,6 +34,9 @@ class MenuPage:
 
     def show_menu(self):
         self.clear_frame()
+
+        # Show the logged-in username
+        Label(self.root, text=f"Logged in as: {logged_in_user}", font=("Helvetica", 12), fg="blue").pack(pady=10)
 
         Label(self.root, text="Welcome to the Examinee Proctoring Assistant", font=("Helvetica", 20)).pack(pady=20)
 
@@ -60,6 +69,8 @@ class MenuPage:
         AlertsPage(self.root)
 
     def logout(self):
+        global logged_in_user
+        logged_in_user = None  # Clear logged-in user
         self.clear_frame()
         LoginSignupApp(self.root)
 
@@ -79,6 +90,7 @@ class ProctoringApp:
         self.is_proctoring = False
         self.recording = False
         self.out = None  # VideoWriter object for recording
+        self.last_face_detected_time = None  # Timer for no face detection
 
         self.show_proctoring()
 
@@ -96,7 +108,7 @@ class ProctoringApp:
         self.stop_button.pack(side="left", padx=10)
 
         # Return to Menu Button
-        return_button = Button(self.root, text="Return to Menu", command=self.return_to_menu, bg="blue", fg="white", font=("Helvetica", 14))
+        return_button = Button(self.root, text="Return to Menu", command=self.confirm_return_to_menu, bg="blue", fg="white", font=("Helvetica", 14))
         return_button.pack(pady=10)
 
         # Alert and Log display area
@@ -106,6 +118,11 @@ class ProctoringApp:
         scrollbar = Scrollbar(self.root, command=self.alert_log_area.yview)
         scrollbar.pack(side="right", fill="y")
         self.alert_log_area.config(yscrollcommand=scrollbar.set)
+
+    def confirm_return_to_menu(self):
+        if messagebox.askyesno("Confirmation", "Are you sure you want to stop and return to the menu?"):
+            self.stop_proctoring()
+            self.return_to_menu()
 
     def start_proctoring(self):
         self.is_proctoring = True
@@ -143,11 +160,30 @@ class ProctoringApp:
                 gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = self.face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5)
 
-                for (x, y, w, h) in faces:
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Blue rectangle
-                    logging.info(f"Face detected at ({x}, {y}, {w}, {h}).")
-                    alert_message = f"Face detected at ({x}, {y}, {w}, {h})."
-                    self.alert_log_area.insert(tk.END, alert_message + "\n")
+                if len(faces) == 0:
+                    # If no face detected, check for the time elapsed
+                    if self.last_face_detected_time is None:
+                        self.last_face_detected_time = datetime.now()
+                    else:
+                        elapsed_time = (datetime.now() - self.last_face_detected_time).total_seconds()
+                        if elapsed_time >= 3:  # No face for 3 seconds
+                            self.alert_log_area.insert(tk.END, "ALERT: No face detected for 3 seconds!\n")
+                            logging.warning("ALERT: No face detected for 3 seconds!")
+                else:
+                    self.last_face_detected_time = None  # Reset timer on face detection
+                    # Only take the first detected face (largest)
+                    largest_face = max(faces, key=lambda rect: rect[2] * rect[3])  # (x, y, w, h)
+                    x, y, w, h = largest_face
+                    
+                    head_angle = self.get_head_angle(frame, largest_face)
+
+                    # Check for suspicious behavior
+                    if abs(head_angle) > 45:  # Check if head angle is suspicious
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red rectangle
+                        self.alert_log_area.insert(tk.END, "ALERT: Head angle indicates suspicious behavior!\n")
+                        logging.warning("ALERT: Head angle indicates suspicious behavior!")
+                    else:
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)  # Blue rectangle
 
                 if self.recording:
                     self.out.write(frame)
@@ -159,6 +195,31 @@ class ProctoringApp:
                 self.video_label.configure(image=imgtk)
 
             self.root.after(10, self.show_frame)
+
+    def get_head_angle(self, frame, face_coordinates):
+        # Get the coordinates of the face rectangle
+        x, y, w, h = face_coordinates
+        
+        # Define a dummy logic for head angle detection
+        # Here we simply check the relative positions of the eyes and the center of the face
+        # For this example, let's assume we have fixed landmarks
+        # You can replace this with actual landmark detection if needed
+
+        # Calculate the center of the face
+        center_x = x + w // 2
+        center_y = y + h // 2
+
+        # Assume fixed positions for eyes (replace with actual eye detection)
+        left_eye_y = y + h // 4  # Roughly 25% down from the top of the face
+        right_eye_y = y + h // 4
+
+        # Calculate head angle
+        if center_y < left_eye_y:  # Head tilted up
+            return -45  # Dummy angle
+        elif center_y > left_eye_y:  # Head tilted down
+            return 45  # Dummy angle
+        else:
+            return 0  # No tilt
 
     def return_to_menu(self):
         self.clear_frame()
@@ -286,6 +347,13 @@ class LoginSignupApp:
         self.signup_button = Button(login_frame, text="Don't have an account? Signup", command=self.show_signup_screen, font=("Helvetica", 10), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat")
         self.signup_button.grid(row=6, column=1, pady=10)
 
+        self.forgot_password_button = Button(login_frame, text="Forgot Password?", command=self.forgot_password, font=("Helvetica", 10), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat")
+        self.forgot_password_button.grid(row=7, column=1, pady=10)
+
+    def forgot_password(self):
+        self.clear_frame()
+        ForgotPasswordPage(self.root)
+
     def show_signup_screen(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -317,10 +385,12 @@ class LoginSignupApp:
         self.back_button.grid(row=6, column=1, pady=10)
 
     def login(self):
+        global logged_in_user
         username = self.username_entry.get()
         password = self.password_entry.get()
         
-        if username == "admin" and password == "admin":
+        if username in users_db and users_db[username] == password:
+            logged_in_user = username
             self.clear_frame()
             MenuPage(self.root)
         else:
