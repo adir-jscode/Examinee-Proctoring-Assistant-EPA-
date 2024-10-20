@@ -352,7 +352,7 @@ class LoginSignupApp:
 
     def forgot_password(self):
         self.clear_frame()
-        ForgotPasswordPage(self.root)
+        # ForgotPasswordPage(self.root)
 
     def show_signup_screen(self):
         for widget in self.root.winfo_children():

@@ -3188,3 +3188,5 @@
 2024-10-17 23:11:24,276 - ALERT: No face detected for 3 seconds!
 2024-10-17 23:11:24,403 - ALERT: No face detected for 3 seconds!
 2024-10-17 23:11:24,756 - Proctoring stopped.
+2024-10-20 05:51:08,706 - Proctoring started.
+2024-10-20 05:51:20,159 - Proctoring stopped.
