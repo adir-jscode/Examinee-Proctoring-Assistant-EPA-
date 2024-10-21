@@ -6,8 +6,9 @@ from alerts import AlertsPage
 from login_signup import LoginSignupApp
 
 class MenuPage:
-    def __init__(self, root):
+    def __init__(self, root, logged_in_user):
         self.root = root
+        self.logged_in_user = logged_in_user  # Store the logged-in user
         self.root.title("Examinee Proctoring Assistant - Menu")
         self.root.geometry("800x600")
 
@@ -17,7 +18,7 @@ class MenuPage:
         self.clear_frame()
 
         # Show the logged-in username
-        Label(self.root, text=f"Logged in as: {logged_in_user}", font=("Helvetica", 12), fg="blue").pack(pady=10)
+        Label(self.root, text=f"Logged in as: {self.logged_in_user}", font=("Helvetica", 12), fg="blue").pack(pady=10)
 
         Label(self.root, text="Welcome to the Examinee Proctoring Assistant", font=("Helvetica", 20)).pack(pady=20)
 
@@ -39,21 +40,19 @@ class MenuPage:
 
     def open_proctoring(self):
         self.clear_frame()
-        ProctoringApp(self.root)
+        ProctoringApp(self.root, self.logged_in_user)  # Pass logged_in_user here
 
     def open_recordings(self):
         self.clear_frame()
-        RecordingsPage(self.root)
+        RecordingsPage(self.root, self.logged_in_user) 
 
     def open_alerts(self):
         self.clear_frame()
-        AlertsPage(self.root)
+        AlertsPage(self.root,self.logged_in_user)
 
     def logout(self):
-        global logged_in_user
-        logged_in_user = None
         self.clear_frame()
-        LoginSignupApp(self.root)
+        LoginSignupApp(self.root)  
 
     def clear_frame(self):
         for widget in self.root.winfo_children():

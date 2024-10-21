@@ -1,14 +1,22 @@
 import tkinter as tk
-from tkinter import Label, Button, Entry
+from tkinter import Label, Button, Entry, messagebox
 from PIL import Image, ImageTk
 import os
-from menu import MenuPage
+import sqlite3
 
-users_db = {
-    "admin": "admin123",
-    "user1": "password1"
-}
-logged_in_user = None
+# Connect to SQLite database (or create it if it doesn't exist)
+conn = sqlite3.connect('users.db')
+cursor = conn.cursor()
+
+# Create a users table if it doesn't exist
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )
+''')
+conn.commit()
 
 class LoginSignupApp:
     def __init__(self, root):
@@ -49,19 +57,54 @@ class LoginSignupApp:
         self.signup_button.grid(row=6, column=1, pady=10)
 
     def login(self):
-        global logged_in_user
         username = self.username_entry.get()
         password = self.password_entry.get()
 
-        if username in users_db and users_db[username] == password:
-            logged_in_user = username
+        # Query database to check if credentials are valid
+        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+        user = cursor.fetchone()
+
+        if user:
+            logged_in_user = username  # Set the logged-in user
+            from menu import MenuPage
             self.clear_frame()
-            MenuPage(self.root)
+            MenuPage(self.root, logged_in_user)  # Pass the logged-in user to MenuPage
         else:
-            tk.messagebox.showerror("Error", "Invalid credentials!")
+            messagebox.showerror("Error", "Invalid credentials!")
 
     def show_signup_screen(self):
-        pass  # Add your signup screen functionality
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        signup_frame = tk.Frame(self.root, bg="#2E2F5B")
+        signup_frame.grid(row=0, column=0, padx=20, pady=20)
+
+        Label(signup_frame, text="Signup", font=("Helvetica", 22, "bold"), bg="#2E2F5B", fg="#F4D35E").grid(row=0, column=1, pady=10)
+        Label(signup_frame, text="Username:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=1, column=1, sticky="w", pady=5)
+        self.signup_username_entry = Entry(signup_frame, font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
+        self.signup_username_entry.grid(row=2, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+
+        Label(signup_frame, text="Password:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=3, column=1, sticky="w", pady=5)
+        self.signup_password_entry = Entry(signup_frame, show="*", font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
+        self.signup_password_entry.grid(row=4, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+
+        self.signup_button = Button(signup_frame, text="Signup", command=self.signup, font=("Helvetica", 14), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat")
+        self.signup_button.grid(row=5, column=1, pady=20, ipadx=10, ipady=5)
+
+        Button(signup_frame, text="Back to Login", command=self.show_login_screen, font=("Helvetica", 10), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat").grid(row=6, column=1, pady=10)
+
+    def signup(self):
+        username = self.signup_username_entry.get()
+        password = self.signup_password_entry.get()
+
+        # Insert the new user into the database
+        try:
+            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            messagebox.showinfo("Success", "Account created successfully!")
+            self.show_login_screen()
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Error", "Username already exists!")
 
     def clear_frame(self):
         for widget in self.root.winfo_children():

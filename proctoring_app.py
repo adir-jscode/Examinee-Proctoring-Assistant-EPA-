@@ -214,7 +214,7 @@ class ProctoringApp:
         right_eye_y = y + h // 4
 
         # Calculate head angle
-        if center_y < left_eye_y:  # Head tilted up
+        if center_y < left_eye_y:  
             return -45  # Dummy angle
         elif center_y > left_eye_y:  # Head tilted down
             return 45  # Dummy angle

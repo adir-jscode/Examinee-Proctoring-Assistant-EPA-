@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import Label, Text, Button
 
 class AlertsPage:
-    def __init__(self, root):
+    def __init__(self, root, logged_in_user):
         self.root = root
+        self.logged_in_user = logged_in_user
         self.root.title("Examinee Proctoring Assistant - Alerts")
         self.root.geometry("800x600")
 
@@ -29,7 +30,7 @@ class AlertsPage:
 
     def return_to_menu(self):
         from menu import MenuPage
-        MenuPage(self.root)
+        MenuPage(self.root, self.logged_in_user)
 
     def clear_frame(self):
         for widget in self.root.winfo_children():

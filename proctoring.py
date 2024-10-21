@@ -11,8 +11,9 @@ if not os.path.exists(RECORDINGS_DIR):
     os.makedirs(RECORDINGS_DIR)
 
 class ProctoringApp:
-    def __init__(self, root):
+    def __init__(self, root, logged_in_user):
         self.root = root
+        self.logged_in_user = logged_in_user
         self.root.title("Examinee Proctoring Assistant - Proctoring")
         self.root.geometry("800x600")
         
@@ -21,6 +22,7 @@ class ProctoringApp:
         self.recording = False
         self.out = None
         self.last_face_detected_time = None
+        self.capture = None  # Initialize capture as None
 
         self.show_proctoring()
 
@@ -36,6 +38,7 @@ class ProctoringApp:
         self.stop_button = Button(self.root, text="Stop Proctoring", command=self.stop_proctoring, bg="red", fg="white", font=("Helvetica", 14))
         self.stop_button.pack(side="left", padx=10)
 
+        # Return to Menu Button
         return_button = Button(self.root, text="Return to Menu", command=self.confirm_return_to_menu, bg="blue", fg="white", font=("Helvetica", 14))
         return_button.pack(pady=10)
 
@@ -48,13 +51,14 @@ class ProctoringApp:
 
     def start_proctoring(self):
         self.is_proctoring = True
-        self.capture = cv2.VideoCapture(0)
+        self.capture = cv2.VideoCapture(0)  # Create the capture object
         self.record_video()
 
     def stop_proctoring(self):
         self.is_proctoring = False
-        if self.capture:
+        if self.capture is not None:  # Check if capture exists
             self.capture.release()
+            self.capture = None  # Reset capture after releasing
         if self.out:
             self.out.release()
         self.video_label.config(image="")
@@ -68,7 +72,7 @@ class ProctoringApp:
         self.detect_faces()
 
     def detect_faces(self):
-        if self.is_proctoring and self.capture.isOpened():
+        if self.is_proctoring and self.capture and self.capture.isOpened():
             ret, frame = self.capture.read()
             if ret:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -91,9 +95,11 @@ class ProctoringApp:
         self.alert_log_area.see(tk.END)
 
     def confirm_return_to_menu(self):
-        self.stop_proctoring()
+       
+        if messagebox.askyesno("Confirmation", "Are you sure you want to stop and return to the menu?"):
+            self.stop_proctoring()
         from menu import MenuPage
-        MenuPage(self.root)
+        MenuPage(self.root, self.logged_in_user)
 
     def clear_frame(self):
         for widget in self.root.winfo_children():
