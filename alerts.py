@@ -20,11 +20,11 @@ class AlertsPage:
         return_button = Button(self.root, text="Return to Menu", command=self.return_to_menu, bg="blue", fg="white", font=("Helvetica", 14))
         return_button.pack(pady=10)
 
-        # Example of loading alerts
+        
         self.load_alerts()
 
     def load_alerts(self):
-        alerts = ["Alert 1", "Alert 2", "Alert 3"]  # Placeholder
+        alerts = ["Alert 1", "Alert 2", "Alert 3"] 
         for alert in alerts:
             self.alert_log_area.insert(tk.END, f"{alert}\n")
 

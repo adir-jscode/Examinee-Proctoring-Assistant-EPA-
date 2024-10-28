@@ -22,8 +22,7 @@ class ProctoringApp:
         self.recording = False
         self.out = None
         self.last_face_detected_time = None
-        self.capture = None  # Initialize capture as None
-
+        self.capture = None  
         self.show_proctoring()
 
     def show_proctoring(self):
@@ -38,7 +37,7 @@ class ProctoringApp:
         self.stop_button = Button(self.root, text="Stop Proctoring", command=self.stop_proctoring, bg="red", fg="white", font=("Helvetica", 14))
         self.stop_button.pack(side="left", padx=10)
 
-        # Return to Menu Button
+        
         return_button = Button(self.root, text="Return to Menu", command=self.confirm_return_to_menu, bg="blue", fg="white", font=("Helvetica", 14))
         return_button.pack(pady=10)
 
@@ -51,14 +50,14 @@ class ProctoringApp:
 
     def start_proctoring(self):
         self.is_proctoring = True
-        self.capture = cv2.VideoCapture(0)  # Create the capture object
+        self.capture = cv2.VideoCapture(0)  
         self.record_video()
 
     def stop_proctoring(self):
         self.is_proctoring = False
-        if self.capture is not None:  # Check if capture exists
+        if self.capture is not None:  
             self.capture.release()
-            self.capture = None  # Reset capture after releasing
+            self.capture = None 
         if self.out:
             self.out.release()
         self.video_label.config(image="")

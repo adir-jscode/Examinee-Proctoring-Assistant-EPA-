@@ -8,7 +8,7 @@ from login_signup import LoginSignupApp
 class MenuPage:
     def __init__(self, root, logged_in_user):
         self.root = root
-        self.logged_in_user = logged_in_user  # Store the logged-in user
+        self.logged_in_user = logged_in_user 
         self.root.title("Examinee Proctoring Assistant - Menu")
         self.root.geometry("800x600")
 
@@ -17,7 +17,7 @@ class MenuPage:
     def show_menu(self):
         self.clear_frame()
 
-        # Show the logged-in username
+       
         Label(self.root, text=f"Logged in as: {self.logged_in_user}", font=("Helvetica", 12), fg="blue").pack(pady=10)
 
         Label(self.root, text="Welcome to the Examinee Proctoring Assistant", font=("Helvetica", 20)).pack(pady=20)

@@ -8,12 +8,15 @@ import sqlite3
 conn = sqlite3.connect('users.db')
 cursor = conn.cursor()
 
-# Create a users table if it doesn't exist
+# Create a users table with additional fields if it doesn't exist
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        full_name TEXT,
+        email TEXT,
+        phone TEXT
     )
 ''')
 conn.commit()
@@ -22,7 +25,7 @@ class LoginSignupApp:
     def __init__(self, root):
         self.root = root
         self.root.title("EPA-Login")
-        self.root.geometry("500x500")
+        self.root.geometry("500x600")  # Adjust height for extra fields
         self.root.config(bg="#2E2F5B")
         self.show_login_screen()
 
@@ -60,15 +63,14 @@ class LoginSignupApp:
         username = self.username_entry.get()
         password = self.password_entry.get()
 
-        # Query database to check if credentials are valid
         cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
         user = cursor.fetchone()
 
         if user:
-            logged_in_user = username  # Set the logged-in user
+            logged_in_user = username
             from menu import MenuPage
             self.clear_frame()
-            MenuPage(self.root, logged_in_user)  # Pass the logged-in user to MenuPage
+            MenuPage(self.root, logged_in_user)
         else:
             messagebox.showerror("Error", "Invalid credentials!")
 
@@ -80,26 +82,44 @@ class LoginSignupApp:
         signup_frame.grid(row=0, column=0, padx=20, pady=20)
 
         Label(signup_frame, text="Signup", font=("Helvetica", 22, "bold"), bg="#2E2F5B", fg="#F4D35E").grid(row=0, column=1, pady=10)
-        Label(signup_frame, text="Username:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=1, column=1, sticky="w", pady=5)
+
+        # Additional fields for signup
+        Label(signup_frame, text="Full Name:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=1, column=1, sticky="w", pady=5)
+        self.signup_full_name_entry = Entry(signup_frame, font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
+        self.signup_full_name_entry.grid(row=2, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+
+        Label(signup_frame, text="Username:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=3, column=1, sticky="w", pady=5)
         self.signup_username_entry = Entry(signup_frame, font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
-        self.signup_username_entry.grid(row=2, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+        self.signup_username_entry.grid(row=4, column=1, padx=10, pady=5, ipady=5, ipadx=10)
 
-        Label(signup_frame, text="Password:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=3, column=1, sticky="w", pady=5)
+        Label(signup_frame, text="Password:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=5, column=1, sticky="w", pady=5)
         self.signup_password_entry = Entry(signup_frame, show="*", font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
-        self.signup_password_entry.grid(row=4, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+        self.signup_password_entry.grid(row=6, column=1, padx=10, pady=5, ipady=5, ipadx=10)
 
+        Label(signup_frame, text="Email:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=7, column=1, sticky="w", pady=5)
+        self.signup_email_entry = Entry(signup_frame, font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
+        self.signup_email_entry.grid(row=8, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+
+        Label(signup_frame, text="Phone:", font=("Helvetica", 12), bg="#2E2F5B", fg="#F4D35E").grid(row=9, column=1, sticky="w", pady=5)
+        self.signup_phone_entry = Entry(signup_frame, font=("Helvetica", 12), bg="#FAF0CA", fg="#000000", relief="flat", bd=2)
+        self.signup_phone_entry.grid(row=10, column=1, padx=10, pady=5, ipady=5, ipadx=10)
+
+        # Signup and back buttons
         self.signup_button = Button(signup_frame, text="Signup", command=self.signup, font=("Helvetica", 14), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat")
-        self.signup_button.grid(row=5, column=1, pady=20, ipadx=10, ipady=5)
+        self.signup_button.grid(row=11, column=1, pady=20, ipadx=10, ipady=5)
 
-        Button(signup_frame, text="Back to Login", command=self.show_login_screen, font=("Helvetica", 10), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat").grid(row=6, column=1, pady=10)
+        Button(signup_frame, text="Back to Login", command=self.show_login_screen, font=("Helvetica", 10), bg="#505581", fg="white", activebackground="#43496C", activeforeground="white", relief="flat").grid(row=12, column=1, pady=10)
 
     def signup(self):
+        full_name = self.signup_full_name_entry.get()
         username = self.signup_username_entry.get()
         password = self.signup_password_entry.get()
+        email = self.signup_email_entry.get()
+        phone = self.signup_phone_entry.get()
 
-        # Insert the new user into the database
         try:
-            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            cursor.execute("INSERT INTO users (username, password, full_name, email, phone) VALUES (?, ?, ?, ?, ?)", 
+                           (username, password, full_name, email, phone))
             conn.commit()
             messagebox.showinfo("Success", "Account created successfully!")
             self.show_login_screen()
