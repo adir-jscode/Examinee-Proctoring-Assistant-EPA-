@@ -3,7 +3,7 @@ import mediapipe as mp
 import numpy as np
 import tkinter as tk
 from PIL import Image, ImageTk
-from tkinter import Label, Text
+from tkinter import Label, Text, Button, Frame
 import time
 import os
 import logging
@@ -36,30 +36,75 @@ class ProctoringApp:
         self.is_proctoring = False
         self.out = None
 
-        # UI elements
-        self.video_label = Label(self.root)
-        self.video_label.pack(pady=10)
-        self.alert_log_area = Text(self.root, height=10, width=80)
-        self.alert_log_area.pack(pady=10)
+        # UI colors
+        self.bg_color = "#2E2F5B"  # Main background color
+        self.label_color = "#F4D35E"  # Label text color
+        self.button_bg_color = "#505581"  # Button background color
+        self.button_fg_color = "#FFFFFF"  # Button text color
+        self.alert_bg_color = "#F0D3A0"  # Valid alert log background color
+        self.button_start_bg_color = "#28a745"  # Start button background color
+        self.button_stop_bg_color = "#dc3545"  # Stop button background color
+        self.button_back_bg_color = "#007bff"  # Back button background color
+        self.button_fg_color = "#FFFFFF"  # Button text color
+        self.alert_bg_color = "#F0D3A0"  # Valid alert log background color
+
+        # Main frame
+        self.main_frame = Frame(self.root, bg=self.bg_color)
+        self.main_frame.pack(expand=True, fill="both")
+
+        # Video label
+        self.video_label = Label(self.main_frame, bg=self.bg_color)
+        self.video_label.pack(pady=10, fill="both", expand=True)
+
+        # Alert log area
+        self.alert_log_area = Text(
+            self.main_frame, height=10, width=80, bg=self.alert_bg_color, fg="#000000"
+        )
+        self.alert_log_area.pack(pady=10, fill="both", expand=True)
         self.alert_log_area.insert(tk.END, "Proctoring Log:\n")
 
         # Start/Stop Buttons
-        self.start_button = tk.Button(
-            self.root,
+        self.start_button = Button(
+            self.main_frame,
             text="Start Proctoring",
             command=self.start_proctoring,
-            bg="green",
-            fg="white",
+            bg=self.button_bg_color,
+            fg=self.button_fg_color,
         )
         self.start_button.pack(side="left", padx=10)
-        self.stop_button = tk.Button(
-            self.root,
+
+        self.stop_button = Button(
+            self.main_frame,
             text="Stop Proctoring",
             command=self.stop_proctoring,
-            bg="red",
-            fg="white",
+            bg=self.button_bg_color,
+            fg=self.button_fg_color,
         )
         self.stop_button.pack(side="left", padx=10)
+
+        # Back to Menu Button
+        self.back_button = Button(
+            self.main_frame,
+            text="Back to Menu",
+            command=self.back_to_menu,
+            bg=self.button_bg_color,
+            fg=self.button_fg_color,
+        )
+        self.back_button.pack(side="left", padx=10)
+
+        return_button = Button(
+            self.root,
+            text="Return to Menu",
+            command=self.return_to_menu,
+            bg="blue",
+            fg="white",
+            font=("Helvetica", 14),
+        )
+        return_button.pack(pady=10)
+
+        # Configure grid layout
+        self.main_frame.columnconfigure(0, weight=1)
+        self.main_frame.rowconfigure(0, weight=1)
 
     def start_proctoring(self):
         self.is_proctoring = True
@@ -79,6 +124,16 @@ class ProctoringApp:
             self.out.release()
             self.out = None
         self.video_label.config(image="")
+
+    def back_to_menu(self):
+        self.clear_frame()
+        from menu import MenuPage
+
+        MenuPage(self.root, self.logged_in_user)
+
+    def clear_frame(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
     def process_frames(self):
         if not self.is_proctoring:

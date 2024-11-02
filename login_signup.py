@@ -170,9 +170,17 @@ class LoginSignupApp:
         signup_frame = tk.Frame(self.root, bg="#2E2F5B")
         signup_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        for i in range(12):
+        for i in range(8):
             signup_frame.grid_rowconfigure(i, weight=1)
-        signup_frame.grid_columnconfigure(1, weight=1)
+            signup_frame.grid_columnconfigure(1, weight=1)
+
+        image_path = os.path.join("images", "login_image.png")
+        self.image = Image.open(image_path)
+        self.image = self.image.resize((200, 200), Image.LANCZOS)
+        self.image_tk = ImageTk.PhotoImage(self.image)
+
+        self.image_label = Label(signup_frame, image=self.image_tk, bg="#2E2F5B")
+        self.image_label.grid(row=0, column=0, rowspan=6, padx=20, pady=10, sticky="n")
 
         Label(
             signup_frame,
