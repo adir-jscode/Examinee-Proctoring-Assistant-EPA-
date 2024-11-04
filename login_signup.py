@@ -1,14 +1,13 @@
 import tkinter as tk
 from tkinter import Label, Button, Entry, messagebox
-from PIL import Image, ImageTk
 import os
 import sqlite3
+import PIL.Image as Image
+import PIL.ImageTk as ImageTk
 
-# Connect to SQLite database (or create it if it doesn't exist)
 conn = sqlite3.connect("users.db")
 cursor = conn.cursor()
 
-# Create a users table with additional fields if it doesn't exist
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
